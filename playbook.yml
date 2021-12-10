@@ -1,0 +1,82 @@
+---
+- hosts: webservers
+  become: true
+  tasks:
+
+  - name: Update apt repo
+    apt:
+       update_cache: yes
+
+  - name: Install packages
+    apt:
+       name: curl
+       state: latest
+       update_cache: yes
+
+  - name: allow and enable
+    ufw:
+      state: enabled
+      policy: allow
+      direction: incoming
+
+  - name: allow 80
+    ufw:
+      rule: allow
+      port: 80
+      proto: tcp
+
+  - name: allow 8888
+    ufw:
+      rule: allow
+      port: 8888
+      proto: tcp
+
+  - name: allow 1467 new ssh port
+    ufw:
+      rule: allow
+      port: 1467
+      proto: tcp
+      
+  - name: ssh port 1467
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      regexp: '^Port'
+      line: 'Port 1467'
+    notify: 'Restart sshd'
+
+  - name:
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Docker repo
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu bionic stable
+      state: present
+
+  - name: Update apt and install docker-ce
+    apt:
+       update_cache: yes
+       name: docker-ce
+       state: latest
+
+  - name: CP
+    copy: src=/root/wsr-skillcloud-moscow/docker-compose.sh dest=/opt/docker-compose.sh mode=0777
+
+  - name: docker run script
+    shell: /opt/docker-compose.sh
+
+  - name: mkdir
+    file:
+        path: /skillcloud-ngsite
+        state: directory
+        mode: 0777
+
+  - name: cp files
+    copy:    copy:
+        src: ~/
+        dest: /skillcloud-ngsite
+        force: no
+
+  - name: reboot
+    shell: reboot
