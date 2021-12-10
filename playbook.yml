@@ -73,7 +73,7 @@
         mode: 0777
 
   - name: cp files
-    copy:    copy:
+    copy:
         src: ~/
         dest: /skillcloud-ngsite
         force: no
